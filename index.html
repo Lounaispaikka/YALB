@@ -2,7 +2,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<title>LP - Unica lounaat</title>
+	<title>Yet Another Lunch Browser</title>
 	<link rel="stylesheet" href="default.css" />
 	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />
 	<script src="http://cdn.leafletjs.com/leaflet-0.5/leaflet.js"></script>
@@ -37,6 +37,41 @@
 		#lunchlist {
 			min-height: 300px;
 		}
+		#info {
+		  display: inline;
+		  margin: auto;
+		  text-align: left;
+		}
+		#restaurant_name {
+		  background:transparent url('gfx/restaurant.png') top left no-repeat;
+		  float: left;
+		  padding: 6px 0 6px 32px;
+		  margin-left: 5px;
+		  margin-bottom: 5px;
+		  color: gray;
+		}
+		#distance {
+		  background:transparent url('gfx/distance.png') top left no-repeat;
+		  float: left;
+		  padding: 6px 0 6px 32px;
+		  margin-left: 15px;
+		  margin-bottom: 5px;
+		  color: gray;
+		}
+		#traveltime {
+		  background:transparent url('gfx/time.png') top left no-repeat;
+		  float: left;
+		  padding: 6px 0 6px 32px;
+		  margin-left: 15px;
+		  margin-bottom: 5px;
+		  color: gray;
+		}
+		#today_lunchlist {
+		  clear: both;
+		}
+		#reservoir{
+		  display: none;
+		}
 	</style>
 </head>
 <body>
@@ -49,14 +84,25 @@
 		</div>
 		
 		
-		<div id="lunchlist"></div>
+		<div id="reservoir">
+		  <img src='gfx/time.png'/>
+		  <img src='gfx/distance.png'/>
+		  <img src='gfx/restaurant.png'/>
+		</div>
 	</div>
 	<div id="small_dialog" data-role="dialog" data-close-btn="right" >
 		<div id="small_dialog_header" data-role="header">
 			<h2>Lounaslista</h2>
 		</div>
-		<div id="today_lunchlist" data-role="content">
-		
+		<div id="dialog_container" data-role="content">
+		  <div id="info">
+		    <div id="restaurant_name"></div>
+		    <div id="distance"></div>
+		    <div id="traveltime"></div>
+		  </div>
+		  <div id="today_lunchlist">
+		  
+		  </div>
 		</div>
 	</div>
 	<script>
@@ -200,7 +246,9 @@
 				 * Now this is ugly! Don't do this @home!
 				 */
 				for (var i = 0;i < elements.length;i++) {
-					
+					console.log(elements[i].distance, elements[i].duration);
+					ruokapaikat[i].push(elements[i].distance);
+					ruokapaikat[i].push(elements[i].duration);
 					if (i == 0) {
 						currentlyClosest = i;
 					} else {
@@ -231,7 +279,7 @@
 			//Center the map on the closest target and set the zoom level
 			map.setView(new L.LatLng(restaurant[0],restaurant[1]), zoom);
 			//Fetch data of the closest restaurant
-			readLunchlist('http://www.unica.fi/fi/ravintolat/' + restaurant[2] + '/');
+			//readLunchlist('http://www.unica.fi/fi/ravintolat/' + restaurant[2] + '/');
 			//do something with distance & duration
 			console.log("distance: " + distance + " duration: " + duration);
 		}
@@ -307,13 +355,26 @@
 		
 			//loading mask fix
 			var loader = $(".ui-loader").clone();
-			$('#small_dialog').find('[data-role="content"]').html(loader);
+			$('#today_lunchlist').html(loader);
 			$('#small_dialog').find(".ui-loader").addClass("ui-loader-altered");
 			$('#small_dialog').find(".ui-loader-altered").show();
 			
 			//read lunchlist
 			readLunchCSV(restaurant_name);
-			//$('#small_dialog_header').html('<h2>'+restaurant_name.capitalize()+'</h2>');
+			$.map(ruokapaikat, function(val, i){
+			  if(val.length == 5){
+			    if(val[2] == restaurant_name){
+			      $('#restaurant_name').html(restaurant_name.capitalize());
+			      $('#distance').html(val[3].text);
+			      $('#traveltime').html(val[4].text);
+			    }
+			  }
+			  else{
+			    $('#restaurant_name').html("");
+			    $('#distance').html("");
+			    $('#traveltime').html("");
+			  }
+			});
 			//change page to dialog
 			$.mobile.changePage("#small_dialog");
 			return false;
