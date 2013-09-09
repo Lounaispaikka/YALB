@@ -39,9 +39,9 @@
 </head>
 <body>
 	<div id="content" data-role="page">
-		<div data-role="header">
+		<!---<div data-role="header">
 			<h1>Yet another lunch browser</h1>
-		</div>
+		</div>-->
 		<div data-role="content">
 			<div id="map"></div>
 		</div>
@@ -210,8 +210,7 @@
 			
 			//read lunchlist
 			readLunchCSV(restaurant_name);
-			$('#small_dialog_header').empty();
-			$('#small_dialog_header').append('<h2>'+restaurant_name.capitalize()+'</h2>');
+			//$('#small_dialog_header').html('<h2>'+restaurant_name.capitalize()+'</h2>');
 			//change page to dialog
 			$.mobile.changePage("#small_dialog");
 			return false;
