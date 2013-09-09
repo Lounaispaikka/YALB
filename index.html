@@ -1,0 +1,164 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>LP - Unica lounaat</title>
+	<link rel="stylesheet" href="default.css" />
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />
+	<script src="http://cdn.leafletjs.com/leaflet-0.5/leaflet.js"></script>
+	<!--[if lte IE 8]>
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css" />
+	<![endif]-->
+	<script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+	<script src="jquery.xdomainajax.js"></script>
+	<script src="jquery.csv-0.71.js"></script>
+</head>
+<body>
+	<div id="content">
+	<div id="map"></div>
+	<div id="lunchlist"></div>
+	<div id="today_lunchlist"></div>
+	</div>
+	<script>
+		var map;
+		var ajaxRequest;
+		var plotlist;
+		var plotlayers=[];
+		
+		var ruokapaikat = [   
+		  [60.456921,22.28649, 'arcanum'],
+		  [60.45428,22.28742, 'assarin-ullakko'],
+		  [60.45429,22.28728, 'brygge'],
+		  [60.44888,22.29254, 'delica'],
+		  [60.4491,22.29216, 'deli-pharma'],
+		  [60.449695,22.292228, 'dental'],
+		  [60.458053,22.285293, 'macciavelli'],
+		  [60.451108,22.291973, 'mikro'],
+		  [60.454591,22.284946, 'myssy-silinteri'],
+		  [60.429462,22.295226, 'nutritio'],
+		  [60.492449,22.288083, 'ruokakello'],
+		  [60.456497,22.29307, 'tottisalmi']
+		];
+		
+		function initmap() {
+			// set up the map
+			map = new L.Map('map');
+
+			// create the tile layer with correct attribution
+			var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+			var osmAttrib='Map data © OpenStreetMap contributors';
+			var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 20, attribution: osmAttrib});
+			
+			var ruokapaikat_layers = L.layerGroup();
+
+			for (var i = 0; i < ruokapaikat.length; i++) {
+			    var a = ruokapaikat[i];
+			    var title = a[2];
+			    var marker = new L.Marker(new L.LatLng(a[0], a[1]), {
+				title: title
+			    });
+			    marker.on('click', function(d) {
+			      console.log(d);
+			      var restaurant_name = d.target.options.title.toLowerCase();
+			      //readLunchlist('http://www.unica.fi/fi/ravintolat/' + restaurant_name + '/');
+			      readLunchCSV(restaurant_name);
+			    });
+			    ruokapaikat_layers.addLayer(marker);
+			}
+			
+			ruokapaikat_layers
+			
+			map.locate({setView: true, maxZoom: 15});
+			map.addLayer(osm);
+			map.addLayer(ruokapaikat_layers);
+		}
+		
+		function onLocationFound(e) {
+			var radius = e.accuracy / 2;
+
+			L.marker(e.latlng).addTo(map).bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+			L.circle(e.latlng, radius).addTo(map);
+		}
+		function onLocationError(e) {
+			alert(e.message);
+		}
+		
+		function readLunchCSV(name){
+		  $.ajax({
+		      url : "lunchlist/"+name+".csv",
+		      success : function(result){
+			  console.log(result);
+			  lunchlist_array = $.csv.toObjects(result);
+			  console.log(lunchlist_array);
+			  lunchlist = parseLunchlist(lunchlist_array);
+			  printLunchlist(lunchlist);
+			  printTodayLunch(lunchlist);
+		      }
+		  });
+		  $('#lunchlist').empty();
+		  $('#lunchlist').append('<h2>' + name.capitalize() + '</h2>');
+		  $('#today_lunchlist').empty();
+		  $('#today_lunchlist').append('<h2>' + name.capitalize() + '</h2>');
+		}
+		
+		String.prototype.capitalize = function(){
+		  return this.charAt(0).toUpperCase() + this.slice(1);
+		}
+		
+		function parseLunchlist(obj_array){
+		  lunchlist = {}
+		  days = []
+		  $.map(obj_array, function(obj, i){
+		    if($.inArray(obj.DAY, days) == -1) days.push(obj.DAY)
+		  });
+		  $.map(days, function(day, i){
+		    tmp_arr = []
+		    $.map(obj_array, function(obj, i){
+		      if(obj.DAY == day) tmp_arr.push(obj)
+		    });
+		    lunchlist[day] = tmp_arr;
+		  });
+		  return lunchlist;
+		}
+		
+		function printLunchlist(lunchlist){
+		  now = new Date();
+		  today = now.getDay();
+		  day_order = ["Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai", "Sunnuntai"];
+		  printlist = [];
+		  
+		  $.map(day_order, function(day, j){
+		    day_lunchlist = lunchlist[day];
+		    if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
+		      $('#lunchlist').append('<h3>' + day + '</h3>');
+		      $.map(day_lunchlist, function(lunch, i){
+			$('#lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
+		      });
+		    }
+		  });
+		  console.log(printlist);
+		}
+		
+		function printTodayLunch(lunchlist){
+		  now = new Date();
+		  today = now.getDay();
+		  days = ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"];
+		  
+		  day = day_order[today];
+		  day_lunchlist = lunchlist[day];
+		  if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
+		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
+		    $.map(day_lunchlist, function(lunch, i){
+		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
+		    });
+		  }
+		  console.log(printlist);
+		}
+		
+		$(function() {
+			initmap();
+		});
+	</script>
+</body>
+</html>
