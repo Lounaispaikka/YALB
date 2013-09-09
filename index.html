@@ -10,14 +10,52 @@
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css" />
 	<![endif]-->
 	<script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
+	<script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+	<script src="http://leaflet.github.io/Leaflet.label/leaflet.label.js"></script>
 	<script src="jquery.xdomainajax.js"></script>
 	<script src="jquery.csv-0.71.js"></script>
+	<style type="text/css">
+		#map { min-height:320px; height:100%; width:100%; min-width: 640px; margin: -15px;}
+		body {
+			padding: 0;
+			margin: 0;
+		}
+		html, body, {
+			height: 100%;
+		}
+		.ui-dialog-contain {
+			width: 92.5%;
+			max-width: 500px;
+			margin: 10% auto 15px auto;
+			padding: 0;
+			position: relative;
+			top: -15px;
+		}
+		#lunchlist {
+			min-height: 300px;
+		}
+	</style>
 </head>
 <body>
-	<div id="content">
-	<div id="map"></div>
-	<div id="lunchlist"></div>
-	<div id="today_lunchlist"></div>
+	<div id="content" data-role="page">
+		<div data-role="header">
+			<h1>Yet another lunch browser</h1>
+		</div>
+		<div data-role="content">
+			<div id="map"></div>
+		</div>
+		
+		
+		<div id="lunchlist"></div>
+	</div>
+	<div id="small_dialog" data-role="dialog" data-close-btn="right" >
+		<div id="small_dialog_header" data-role="header">
+			<h2>Lounaslista</h2>
+		</div>
+		<div id="today_lunchlist" data-role="content">
+		
+		</div>
 	</div>
 	<script>
 		var map;
@@ -40,6 +78,10 @@
 		  [60.456497,22.29307, 'tottisalmi']
 		];
 		
+		String.prototype.capitalize = function(){
+		  return this.charAt(0).toUpperCase() + this.slice(1);
+		}
+		
 		function initmap() {
 			// set up the map
 			map = new L.Map('map');
@@ -60,17 +102,24 @@
 			    marker.on('click', function(d) {
 			      console.log(d);
 			      var restaurant_name = d.target.options.title.toLowerCase();
-			      //readLunchlist('http://www.unica.fi/fi/ravintolat/' + restaurant_name + '/');
-			      readLunchCSV(restaurant_name);
+			      
+			      //open jquerymobile dialog
+			      smallDialog(restaurant_name);
 			    });
 			    ruokapaikat_layers.addLayer(marker);
 			}
 			
-			ruokapaikat_layers
-			
 			map.locate({setView: true, maxZoom: 15});
 			map.addLayer(osm);
 			map.addLayer(ruokapaikat_layers);
+			
+			//jquerymobile + leaflet fixes. you can try it without and see how it looks :)
+			$('#map').height( $(window).height() );		
+			$('#map').width( $(window).width() );
+			map.invalidateSize();
+			$('.ui-mobile [data-role="page"]').css("position", "relative"); 
+			$('.ui-mobile [data-role="dialog"]').css("position", "relative");
+			$('.ui-page').css("position", "relative");
 		}
 		
 		function onLocationFound(e) {
@@ -85,6 +134,7 @@
 		}
 		
 		function readLunchCSV(name){
+		  $.mobile.loading('show');
 		  $.ajax({
 		      url : "lunchlist/"+name+".csv",
 		      success : function(result){
@@ -92,18 +142,10 @@
 			  lunchlist_array = $.csv.toObjects(result);
 			  console.log(lunchlist_array);
 			  lunchlist = parseLunchlist(lunchlist_array);
-			  printLunchlist(lunchlist);
-			  printTodayLunch(lunchlist);
+			  console.log(lunchlist);
+			  updateSmallLunchList(lunchlist);
 		      }
 		  });
-		  $('#lunchlist').empty();
-		  $('#lunchlist').append('<h2>' + name.capitalize() + '</h2>');
-		  $('#today_lunchlist').empty();
-		  $('#today_lunchlist').append('<h2>' + name.capitalize() + '</h2>');
-		}
-		
-		String.prototype.capitalize = function(){
-		  return this.charAt(0).toUpperCase() + this.slice(1);
 		}
 		
 		function parseLunchlist(obj_array){
@@ -137,23 +179,49 @@
 		      });
 		    }
 		  });
-		  console.log(printlist);
 		}
 		
-		function printTodayLunch(lunchlist){
+		function updateSmallLunchList(lunchlist){
 		  now = new Date();
 		  today = now.getDay();
 		  days = ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"];
 		  
-		  day = day_order[today];
+		  day = days[today];
+		  console.log(lunchlist, day);
 		  day_lunchlist = lunchlist[day];
 		  if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
+		    $('#today_lunchlist').empty();
 		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
 		    $.map(day_lunchlist, function(lunch, i){
 		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
 		    });
 		  }
-		  console.log(printlist);
+		  $.mobile.loading('hide');
+		}
+		
+		//open first info dialog
+		function smallDialog(restaurant_name) {
+		
+			//loading mask fix
+			var loader = $(".ui-loader").clone();
+			$('#small_dialog').find('[data-role="content"]').html(loader);
+			$('#small_dialog').find(".ui-loader").addClass("ui-loader-altered");
+			$('#small_dialog').find(".ui-loader-altered").show();
+			
+			//read lunchlist
+			readLunchCSV(restaurant_name);
+			$('#small_dialog_header').empty();
+			$('#small_dialog_header').append('<h2>'+restaurant_name.capitalize()+'</h2>');
+			//change page to dialog
+			$.mobile.changePage("#small_dialog");
+			return false;
+		}
+		
+		
+		//open more info
+		function largeDialog() {
+			console.log("large dialog");
+			return false;
 		}
 		
 		$(function() {
