@@ -15,6 +15,8 @@
 	<script src="http://leaflet.github.io/Leaflet.label/leaflet.label.js"></script>
 	<script src="jquery.xdomainajax.js"></script>
 	<script src="jquery.csv-0.71.js"></script>
+	<!--Google Maps API v3-->
+	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 	<style type="text/css">
 		#map { min-height:320px; height:100%; width:100%; min-width: 640px; margin: -15px;}
 		body {
@@ -112,6 +114,7 @@
 			map.locate({setView: true, maxZoom: 15});
 			map.addLayer(osm);
 			map.addLayer(ruokapaikat_layers);
+			map.on('locationfound', onLocationFound);
 			
 			//jquerymobile + leaflet fixes. you can try it without and see how it looks :)
 			$('#map').height( $(window).height() );		
@@ -122,15 +125,115 @@
 			$('.ui-page').css("position", "relative");
 		}
 		
+		/**
+		 * If the user allows us to use their location
+		 */
 		function onLocationFound(e) {
+			//Calculate radius
 			var radius = e.accuracy / 2;
-
+			//Where you are!
 			L.marker(e.latlng).addTo(map).bindPopup("You are within " + radius + " meters from this point").openPopup();
-
-			L.circle(e.latlng, radius).addTo(map);
+			
+			//Current position
+			var place = [e.latlng.lat, e.latlng.lng]
+			//Find out the closest restaurant
+			getDistanceDataFromGoogle(place, ruokapaikat, google.maps.TravelMode.BICYCLING);
 		}
+		
 		function onLocationError(e) {
 			alert(e.message);
+		}
+		
+		/*
+		 * Get the distance data using google maps api v3
+		 * 
+		 * @return parsed array of distance & time to closest
+		 * @params from == current location in google readable format
+		 * 		   to == array of destinations in a google readable format
+		 * 		   type == google.maps.TravelMode.WALKING || google.maps.TravelMode.DRIVING || google.maps.TravelMode.BICYCLING
+		 * @see https://developers.google.com/maps/documentation/javascript/directions
+		 *		    https://developers.google.com/maps/documentation/javascript/distancematrix
+		 *			http://stackoverflow.com/questions/2472482/directions-distance-in-google-maps-api-v3
+		 */
+		function getDistanceDataFromGoogle(from, to, mode){
+			//The DistanceMatrix demands both origins and destinations as arrays.
+			var origins = [];
+			origins.push(new google.maps.LatLng(from[0], from[1]));
+			var destinations = [];
+			for (var i = 0;i < to.length; i++) {
+				destinations.push(new google.maps.LatLng(to[i][0], to[i][1]));
+			}
+			
+			/*
+			 * Variables for the request
+			 */
+			var query = {
+				origins: origins,
+				destinations: destinations,
+				travelMode: mode,
+				unitSystem: google.maps.UnitSystem.METRIC
+			};
+			
+			//DirectionService at your service!
+			var distances = new google.maps.DistanceMatrixService();
+			
+			//Haters gonna hate ajax-requests
+			distances.getDistanceMatrix(query, callbackFunction);
+		}
+		
+		/*
+		 * Function called by the ajax-request.
+		 * This is where the actual processing of the data happens.
+		 * Here we compare distances and set the map to the closest point and show information of that restaurant.
+		 * 
+		 * @see https://developers.google.com/maps/documentation/javascript/distancematrix
+		 */
+		function callbackFunction(response, status) {
+			//Currently closest restaurant
+			var currentlyClosest;
+			//For clarity's sake we use variable elements instead of response.rows[0].elements
+			var elements = response.rows[0].elements;
+			
+			if (status == google.maps.DistanceMatrixStatus.OK) {
+				/*
+				 * Loop through the array and find the _position_ of the closest point
+				 * Now this is ugly! Don't do this @home!
+				 */
+				for (var i = 0;i < elements.length;i++) {
+					
+					if (i == 0) {
+						currentlyClosest = i;
+					} else {
+						
+						if (elements[currentlyClosest].distance.value > elements[i].distance.value) {
+							currentlyClosest = i;
+						}
+						
+					}
+				}
+			}
+			
+			var distance = elements[currentlyClosest].distance.text;
+			var duration = elements[currentlyClosest].duration.text;
+			
+			setToClosest(ruokapaikat[currentlyClosest],17,distance, duration);
+		}
+		
+		/**
+		 * This function sets the initial position of the map
+		 * 
+		 * @param restaurant == row of the ruokapaikat array
+		 * 		  zoom == zoom level @see http://leafletjs.com/reference.html#map-class
+		 * 		  distance == String representation of the distance in kilometers
+		 * 		  duration == String representation of the duration in minutes
+		 */
+		function setToClosest(restaurant, zoom, distance, duration) {
+			//Center the map on the closest target and set the zoom level
+			map.setView(new L.LatLng(restaurant[0],restaurant[1]), zoom);
+			//Fetch data of the closest restaurant
+			readLunchlist('http://www.unica.fi/fi/ravintolat/' + restaurant[2] + '/');
+			//do something with distance & duration
+			console.log("distance: " + distance + " duration: " + duration);
 		}
 		
 		function readLunchCSV(name){
