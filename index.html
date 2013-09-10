@@ -21,7 +21,7 @@
 	<script src="leaflet.awesome-markers.js"></script>
 	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 	<style type="text/css">
-		#map { min-height:320px; height:100%; width:100%; min-width: 640px; margin: -15px;}
+		#map { height:100%; width:100%; margin: -15px;}
 		body {
 			padding: 0;
 			margin: 0;
@@ -48,24 +48,23 @@
 		#restaurant_name {
 		  background:transparent url('gfx/restaurant.png') top left no-repeat;
 		  float: left;
-		  padding: 6px 0 6px 32px;
-		  margin-left: 5px;
+		  padding: 6px 0 6px 30px;
 		  margin-bottom: 5px;
 		  color: gray;
 		}
 		#distance {
 		  background:transparent url('gfx/distance.png') top left no-repeat;
 		  float: left;
-		  padding: 6px 0 6px 32px;
-		  margin-left: 15px;
+		  padding: 6px 0 6px 30px;
+		  margin-left: 10px;
 		  margin-bottom: 5px;
 		  color: gray;
 		}
 		#traveltime {
 		  background:transparent url('gfx/time.png') top left no-repeat;
 		  float: left;
-		  padding: 6px 0 6px 32px;
-		  margin-left: 15px;
+		  padding: 6px 0 6px 30px;
+		  margin-left: 10px;
 		  margin-bottom: 5px;
 		  color: gray;
 		}
@@ -104,6 +103,9 @@
 		    <div id="traveltime"></div>
 		  </div>
 		  <div id="today_lunchlist">
+		  
+		  </div>
+		  <div id="week_lunchlist">
 		  
 		  </div>
 		</div>
@@ -421,7 +423,7 @@
 			  console.log(lunchlist_array);
 			  lunchlist = parseLunchlist(lunchlist_array);
 			  console.log(lunchlist);
-			  updateSmallLunchList(lunchlist);
+			  updateLunchList(lunchlist);
 		      }
 		  });
 		}
@@ -441,7 +443,7 @@
 		  });
 		  return lunchlist;
 		}
-		
+		/*
 		function printLunchlist(lunchlist){
 		  now = new Date();
 		  today = now.getDay();
@@ -474,6 +476,40 @@
 		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
 		    });
 		  }
+		  $.mobile.loading('hide');
+		}*/
+		
+		function updateLunchList(lunchlist){
+		  now = new Date();
+		  today = now.getDay();
+		  days = ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"];
+		  day_order = ["Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai", "Sunnuntai"];
+		  
+		  day = days[today];
+		  console.log(lunchlist, day);
+		  day_lunchlist = lunchlist[day];
+		  if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
+		    $('#today_lunchlist').empty();
+		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
+		    $.map(day_lunchlist, function(lunch, i){
+		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
+		    });
+		  }
+		  /*else{
+		    $('#today_lunchlist').empty();
+		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
+		    $('#today_lunchlist').append('<h4>Ei lounasta</h4>');
+		  }*/
+		  $('#week_lunchlist').empty();
+		  $.map(day_order, function(day, j){
+		    day_lunchlist = lunchlist[day];
+		    if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
+		      $('#week_lunchlist').append('<h3>' + day + '</h3>');
+		      $.map(day_lunchlist, function(lunch, i){
+			$('#week_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
+		      });
+		    }
+		  });
 		  $.mobile.loading('hide');
 		}
 		
