@@ -29,26 +29,28 @@ def urlread(url):
 restaurants = ["tottisalmi", "arcanum", 'assarin-ullakko', 'brygge', 'delica', 'deli-pharma', 'dental', 'macciavelli', 'mikro', 'myssy-silinteri', 'nutritio', 'ruokakello']
 restaurants_lunchlists = {}
 for restaurant in restaurants:
-  #print restaurant
   html = urlread("http://www.unica.fi/fi/ravintolat/" + restaurant +"/")
   html = unicode(html, 'utf-8')
   parsed_html = BeautifulSoup(html)
-  #print parsed_html
-  #print parsed_html
   try:
     lunchlist = {}
     lunchlist_html = parsed_html.body.find('div', attrs={'class':'menu-list'})
-    for days in lunchlist_html.find_all('div', attrs={'class':'accord'}):
-	day = days.find('h4').text
+    for day_div in lunchlist_html.find_all('div', attrs={'class':'accord'}):
+	if(restaurant == "arcanum"): print day_div
+	day = day_div.find('h4').text
 	tmp = []
-	for lunch in days.find_all('tr'):
-	    lunch_name = lunch.find('td', attrs={'class':'lunch'})
-	    lunch_limitations = lunch.find('td', attrs={'class':'limitations quiet'})
-	    lunch_price = lunch.find('td', attrs={'class':'price quiet'})
-	    lunch_limitations = (re.sub('\n', ' ', re.sub('\t', '', lunch_limitations.text))).strip()
-	    lunch_price = re.sub('Hinta:', '',(re.sub('\n', ' ', re.sub('\t', '', lunch_price.text)))).strip()
-	    tmp.append([lunch_name.text.encode('utf-8'), lunch_limitations.encode('utf-8'), lunch_price.encode('utf-8')])
-	lunchlist[day] = tmp
+	try:
+	  for lunch in day_div.find_all('tr'):
+	      lunch_name = lunch.find('td', attrs={'class':'lunch'})
+	      lunch_limitations = lunch.find('td', attrs={'class':'limitations quiet'})
+	      lunch_price = lunch.find('td', attrs={'class':'price quiet'})
+	      lunch_limitations = (re.sub('\n', ' ', re.sub('\t', '', lunch_limitations.text))).strip()
+	      lunch_price = re.sub('Hinta:', '',(re.sub('\n', ' ', re.sub('\t', '', lunch_price.text)))).strip()
+	      tmp.append([lunch_name.text.encode('utf-8'), lunch_limitations.encode('utf-8'), lunch_price.encode('utf-8')])
+	  lunchlist[day] = tmp
+	except:
+	  lunchlist[day] = [["Ei lounasta", " ", " "]]
+	  pass
     restaurants_lunchlists[restaurant] = lunchlist
   except:
     pass
