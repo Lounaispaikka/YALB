@@ -17,6 +17,9 @@
 	<script src="jquery.csv-0.71.js"></script>
 	<!--Google Maps API v3-->
 	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+	<link rel="stylesheet" href="leaflet.awesome-markers.css">
+	<script src="leaflet.awesome-markers.js"></script>
+	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 	<style type="text/css">
 		#map { min-height:320px; height:100%; width:100%; min-width: 640px; margin: -15px;}
 		body {
@@ -111,6 +114,12 @@
 		var plotlist;
 		var plotlayers=[];
 		
+		/**
+		  Restaurant-array, for now holds only coords and name.
+		  If user gives his/hers location, we will also append distance and traveltime to this array.
+		  
+		  Array holds following data: lat, lon, name, distance, traveltime
+		**/
 		var ruokapaikat = [   
 		  [60.456921,22.28649, 'arcanum'],
 		  [60.45428,22.28742, 'assarin-ullakko'],
@@ -130,6 +139,49 @@
 		  return this.charAt(0).toUpperCase() + this.slice(1);
 		}
 		
+		/***
+		  Markers and graphics
+		***/
+		/*
+		var userIcon = L.icon({
+		  iconUrl: 'gfx/user2.png',
+		  
+		  iconSize: [48, 48],
+		  iconAnchor: [0, 24],
+		  popupAnchor: [24, -24]
+		});*/
+		
+		var userIcon = L.AwesomeMarkers.icon({
+		  icon: 'icon-user', 
+		  color: 'cadetblue'
+		});
+		
+		var closerestIcon = L.AwesomeMarkers.icon({
+		  icon: 'icon-food', 
+		  color: 'green'
+		});
+		
+		var nearrestIcon = L.AwesomeMarkers.icon({
+		  icon: 'icon-food', 
+		  color: 'orange'
+		});
+		
+		var farrestIcon = L.AwesomeMarkers.icon({
+		  icon: 'icon-food', 
+		  color: 'blue'
+		});
+		
+		var restIcon = L.AwesomeMarkers.icon({
+		  icon: 'icon-food', 
+		  color: 'blue'
+		});
+		
+		var ruokapaikat_layers = L.layerGroup();
+		
+		/***
+		  End of markers and graphics
+		***/
+		
 		function initmap() {
 			// set up the map
 			map = new L.Map('map');
@@ -139,24 +191,24 @@
 			var osmAttrib='Map data © OpenStreetMap contributors';
 			var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 20, attribution: osmAttrib});
 			
-			var ruokapaikat_layers = L.layerGroup();
-
-			for (var i = 0; i < ruokapaikat.length; i++) {
-			    var a = ruokapaikat[i];
-			    var title = a[2];
-			    var marker = new L.Marker(new L.LatLng(a[0], a[1]), {
-				title: title
-			    });
-			    marker.on('click', function(d) {
-			      console.log(d);
-			      var restaurant_name = d.target.options.title.toLowerCase();
-			      
-			      //open jquerymobile dialog
-			      smallDialog(restaurant_name);
-			    });
-			    ruokapaikat_layers.addLayer(marker);
-			}
 			
+
+			/*$.map(ruokapaikat, function(restaurant, i){
+			  var title = restaurant[2];
+			  var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
+			      title: title,
+			      icon: restIcon
+			  });
+			  marker.on('click', function(d) {
+			    console.log(d);
+			    var restaurant_name = d.target.options.title.toLowerCase();
+			    
+			    //open jquerymobile dialog
+			    smallDialog(restaurant_name);
+			  });
+			  ruokapaikat_layers.addLayer(marker);
+			});*/
+		      
 			map.locate({setView: true, maxZoom: 15});
 			map.addLayer(osm);
 			map.addLayer(ruokapaikat_layers);
@@ -171,6 +223,77 @@
 			$('.ui-page').css("position", "relative");
 		}
 		
+		function drawRestaurantMarkers(location_found){
+		    if(location_found){
+		      var rest_by_distance = sortByDistance(ruokapaikat.slice(0)); //HACK
+		      console.log(ruokapaikat);
+		      $.map(rest_by_distance, function(restaurant, i){
+			  var title = restaurant[2];
+			  switch(true){
+			    case i == 0:
+			      var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
+				  title: title,
+				  icon: closerestIcon
+			      });
+			      break;
+			    case i <= (ruokapaikat.length / 3):
+			      var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
+				  title: title,
+				  icon: nearrestIcon
+			      });
+			      break;
+			    default:
+			      var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
+				  title: title,
+				  icon: farrestIcon
+			      });
+			      break;
+			  }
+			  
+			  
+			  marker.on('click', function(d) {
+			    console.log(d);
+			    var restaurant_name = d.target.options.title.toLowerCase();
+			    
+			    //open jquerymobile dialog
+			    smallDialog(restaurant_name);
+			  });
+			  ruokapaikat_layers.addLayer(marker);
+		      });
+		    }
+		    else{
+		      $.map(ruokapaikat, function(restaurant, i){
+			  var title = restaurant[2];
+			  var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
+			      title: title,
+			      icon: restIcon
+			  });
+			  marker.on('click', function(d) {
+			    console.log(d);
+			    var restaurant_name = d.target.options.title.toLowerCase();
+			    
+			    //open jquerymobile dialog
+			    smallDialog(restaurant_name);
+			  });
+			  ruokapaikat_layers.addLayer(marker);
+		      });
+		    }
+		}
+		
+		function sortByDistance(restaurant_array){
+		  if(restaurant_array.length <= 1) return restaurant_array;
+		  var pivot = Math.floor(Math.random()*restaurant_array.length);
+		  var less = [], greater = [];
+		  var pivotElem = restaurant_array.splice(pivot, 1);
+		  for (x in restaurant_array) {
+		    if(restaurant_array[x][3].value <= pivotElem[0][3].value)
+		      less.push(restaurant_array[x])
+		    else
+		      greater.push(restaurant_array[x])
+		  }
+		  return [].concat(sortByDistance(less), pivotElem, sortByDistance(greater));
+		}
+		
 		/**
 		 * If the user allows us to use their location
 		 */
@@ -178,7 +301,7 @@
 			//Calculate radius
 			var radius = e.accuracy / 2;
 			//Where you are!
-			L.marker(e.latlng).addTo(map).bindPopup("You are within " + radius + " meters from this point").openPopup();
+			L.marker(e.latlng, {icon: userIcon}).addTo(map).bindPopup("You are within " + radius + " meters from this point").openPopup();
 			
 			//Current position
 			var place = [e.latlng.lat, e.latlng.lng]
@@ -188,6 +311,7 @@
 		
 		function onLocationError(e) {
 			alert(e.message);
+			drawRestaurantMarkers(false);
 		}
 		
 		/*
@@ -261,10 +385,13 @@
 				}
 			}
 			
+			console.log(currentlyClosest);
+			
 			var distance = elements[currentlyClosest].distance.text;
 			var duration = elements[currentlyClosest].duration.text;
 			
-			setToClosest(ruokapaikat[currentlyClosest],17,distance, duration);
+			drawRestaurantMarkers(true);
+			setToClosest(ruokapaikat[currentlyClosest],16,distance, duration);
 		}
 		
 		/**
@@ -390,6 +517,7 @@
 		$(function() {
 			initmap();
 		});
+		
 	</script>
 </body>
 </html>
