@@ -68,12 +68,16 @@
 		  margin-bottom: 5px;
 		  color: gray;
 		}
-		#today_lunchlist {
+		#today_lunchlist, #week_lunchlist {
+		  display: none;
 		  clear: both;
+		  text-shadow: 0;
+		  color: #000;
 		}
 		#reservoir{
 		  display: none;
 		}
+		
 	</style>
 </head>
 <body>
@@ -95,19 +99,27 @@
 	<div id="small_dialog" data-role="dialog" data-close-btn="right" >
 		<div id="small_dialog_header" data-role="header">
 			<h2>Lounaslista</h2>
+			<div data-role="navbar">
+			  <ul>
+				<li><a href="#today_lunchlist" data-role="tab" data-icon="grid" id="today-btn" data-theme="a">Tänään</a></li>
+				<li><a href="#week_lunchlist" data-role="tab" data-icon="grid" id="week-btn" data-theme="a">Viikon lista</a></li>
+			  </ul>
+		  </div>
 		</div>
+		
 		<div id="dialog_container" data-role="content">
 		  <div id="info">
 		    <div id="restaurant_name"></div>
 		    <div id="distance"></div>
 		    <div id="traveltime"></div>
 		  </div>
-		  <div id="today_lunchlist">
-		  
+		  <div id="today_lunchlist"></div>  	  
+		  <div id="week_lunchlist"></div>
 		  </div>
-		  <div id="week_lunchlist">
-		  
 		  </div>
+		  
+	
+		 
 		</div>
 	</div>
 	<script>
@@ -515,7 +527,7 @@
 		
 		//open first info dialog
 		function smallDialog(restaurant_name) {
-		
+			showToday();
 			//loading mask fix
 			var loader = $(".ui-loader").clone();
 			$('#today_lunchlist').html(loader);
@@ -543,15 +555,40 @@
 			return false;
 		}
 		
+		//show today div
+		function showToday() {
+
+			$("#today-btn").addClass("ui-btn-active");
+			$("#week-btn").removeClass("ui-btn-active");
+			$("#today_lunchlist").show();
+			$("#week_lunchlist").hide();
+			return false;	
+		}
 		
-		//open more info
-		function largeDialog() {
-			console.log("large dialog");
+		//show week div
+		function showWeek() {
+			
+			$("#today-btn").removeClass("ui-btn-active");
+			$("#week-btn").addClass("ui-btn-active");
+			$("#today_lunchlist").hide();
+			$("#week_lunchlist").show();
 			return false;
 		}
 		
 		$(function() {
-			initmap();
+			initmap();	
+			
+			//bind today-button click
+			$("#today-btn").bind("click", function() {
+				showToday();
+				return false;
+			});
+			
+			//bind week-button click
+			$("#week-btn").bind("click", function() {
+				showWeek();
+				return false;
+			});
 		});
 		
 	</script>
