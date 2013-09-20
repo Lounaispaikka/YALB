@@ -125,8 +125,6 @@
 	<script>
 		var map;
 		var ajaxRequest;
-		var plotlist;
-		var plotlayers=[];
 		
 		/**
 		  Restaurant-array, for now holds only coords and name.
@@ -135,7 +133,7 @@
 		  Array holds following data: lat, lon, name, distance, traveltime
 		**/
 		var ruokapaikat = [   
-		  [60.456921,22.28649, 'arcanum'],
+		  //[60.456921,22.28649, 'arcanum'], // Arcanum has some inconsistent data in the menu listing, so commenting out for now
 		  [60.45428,22.28742, 'assarin-ullakko'],
 		  [60.45429,22.28728, 'brygge'],
 		  [60.44888,22.29254, 'delica'],
@@ -149,6 +147,7 @@
 		  [60.456497,22.29307, 'tottisalmi']
 		];
 		
+		// Define capitalize-method for Strings
 		String.prototype.capitalize = function(){
 		  return this.charAt(0).toUpperCase() + this.slice(1);
 		}
