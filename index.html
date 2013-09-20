@@ -81,11 +81,15 @@
 	</style>
 </head>
 <body>
+	<!-- jQuery Mobile uses HTML5 data-attributes to allow for markup-based initialization and configurations of widgets
+	see more at http://jquerymobile.com/demos/1.2.1/docs/api/data-attributes.html
+	#map div needs width and height set in css
+	
+	map page-->
 	<div id="content" data-role="page">
 		<div data-role="content">
 			<div id="map"></div>
 		</div>
-		
 		
 		<div id="reservoir">
 		  <img src='gfx/time.png'/>
@@ -93,6 +97,8 @@
 		  <img src='gfx/restaurant.png'/>
 		</div>
 	</div>
+	
+	<!-- dialog page -->
 	<div id="small_dialog" data-role="dialog" data-close-btn="right" >
 		<div id="small_dialog_header" data-role="header">
 			<h2>Lounaslista</h2>
