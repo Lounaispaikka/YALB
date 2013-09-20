@@ -270,7 +270,10 @@
 		      });
 		    }
 		}
-		
+		/*
+		* Do a quick sort on restaurant position relative to users to find
+		* the nearest restaurant location
+		*/
 		function sortByDistance(restaurant_array){
 		  if(restaurant_array.length <= 1) return restaurant_array;
 		  var pivot = Math.floor(Math.random()*restaurant_array.length);
@@ -300,6 +303,9 @@
 			getDistanceDataFromGoogle(place, ruokapaikat, google.maps.TravelMode.BICYCLING);
 		}
 		
+		/**
+		 * Users location is not defined or blocked  
+		 */
 		function onLocationError(e) {
 			alert(e.message);
 			// Set coordinates and zoom for the map view
@@ -311,8 +317,8 @@
 		 * Get the distance data using google maps api v3
 		 * 
 		 * @return parsed array of distance & time to closest
-		 * @params from == current location in google readable format
-		 * 		   to == array of destinations in a google readable format
+		 * @params from == current location
+		 * 		   to == array of destinations
 		 * 		   type == google.maps.TravelMode.WALKING || google.maps.TravelMode.DRIVING || google.maps.TravelMode.BICYCLING
 		 * @see https://developers.google.com/maps/documentation/javascript/directions
 		 *		    https://developers.google.com/maps/documentation/javascript/distancematrix
@@ -404,6 +410,10 @@
 			console.log("distance: " + distance + " duration: " + duration);
 		}
 		
+		/*
+		* Open csv files created with python script and 
+		* process results
+		*/
 		function readLunchCSV(name){
 		  $.mobile.loading('show');
 		  $.ajax({
@@ -419,6 +429,9 @@
 		  });
 		}
 		
+		/*
+		* parse given array
+		*/
 		function parseLunchlist(obj_array){
 		  lunchlist = {}
 		  days = []
@@ -435,6 +448,9 @@
 		  return lunchlist;
 		}
 		
+		/*
+		* Update lunchlist
+		*/
 		function updateLunchList(lunchlist){
 		  now = new Date();
 		  today = now.getDay();
