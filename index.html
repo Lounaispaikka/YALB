@@ -82,9 +82,6 @@
 </head>
 <body>
 	<div id="content" data-role="page">
-		<!---<div data-role="header">
-			<h1>Yet another lunch browser</h1>
-		</div>-->
 		<div data-role="content">
 			<div id="map"></div>
 		</div>
@@ -155,14 +152,6 @@
 		/***
 		  Markers and graphics
 		***/
-		/*
-		var userIcon = L.icon({
-		  iconUrl: 'gfx/user2.png',
-		  
-		  iconSize: [48, 48],
-		  iconAnchor: [0, 24],
-		  popupAnchor: [24, -24]
-		});*/
 		
 		var userIcon = L.AwesomeMarkers.icon({
 		  icon: 'icon-user', 
@@ -204,24 +193,6 @@
 			var osmAttrib='Map data © OpenStreetMap contributors';
 			var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 20, attribution: osmAttrib});
 			
-			
-
-			/*$.map(ruokapaikat, function(restaurant, i){
-			  var title = restaurant[2];
-			  var marker = new L.Marker(new L.LatLng(restaurant[0], restaurant[1]), {
-			      title: title,
-			      icon: restIcon
-			  });
-			  marker.on('click', function(d) {
-			    console.log(d);
-			    var restaurant_name = d.target.options.title.toLowerCase();
-			    
-			    //open jquerymobile dialog
-			    smallDialog(restaurant_name);
-			  });
-			  ruokapaikat_layers.addLayer(marker);
-			});*/
-		      
 			map.locate({setView: true, maxZoom: 15});
 			map.addLayer(osm);
 			map.addLayer(ruokapaikat_layers);
@@ -457,41 +428,6 @@
 		  });
 		  return lunchlist;
 		}
-		/*
-		function printLunchlist(lunchlist){
-		  now = new Date();
-		  today = now.getDay();
-		  day_order = ["Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai", "Sunnuntai"];
-		  printlist = [];
-		  
-		  $.map(day_order, function(day, j){
-		    day_lunchlist = lunchlist[day];
-		    if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
-		      $('#lunchlist').append('<h3>' + day + '</h3>');
-		      $.map(day_lunchlist, function(lunch, i){
-			$('#lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
-		      });
-		    }
-		  });
-		}
-		
-		function updateSmallLunchList(lunchlist){
-		  now = new Date();
-		  today = now.getDay();
-		  days = ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"];
-		  
-		  day = days[today];
-		  console.log(lunchlist, day);
-		  day_lunchlist = lunchlist[day];
-		  if(day_lunchlist != undefined && day_lunchlist != null && day_lunchlist.length != 0){
-		    $('#today_lunchlist').empty();
-		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
-		    $.map(day_lunchlist, function(lunch, i){
-		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
-		    });
-		  }
-		  $.mobile.loading('hide');
-		}*/
 		
 		function updateLunchList(lunchlist){
 		  now = new Date();
@@ -509,11 +445,6 @@
 		      $('#today_lunchlist').append('<tr><td>' + lunch.LUNCH + '<td><td>' + lunch.LIMITATIONS + '<td><td>' + lunch.PRICE + '<td>');
 		    });
 		  }
-		  /*else{
-		    $('#today_lunchlist').empty();
-		    $('#today_lunchlist').append('<h3>' + day + '</h3>');
-		    $('#today_lunchlist').append('<h4>Ei lounasta</h4>');
-		  }*/
 		  $('#week_lunchlist').empty();
 		  $.map(day_order, function(day, j){
 		    day_lunchlist = lunchlist[day];
